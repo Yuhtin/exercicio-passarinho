@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <title>Exercício do Pássaro</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script>
+
+        // Configuracão do Phaser
+        var config = {
+            type: Phaser.AUTO,
+
+            // Tamanho do canvas do phaser
+            width: 800,
+            height: 600,
+
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        // Inicialização do Phaser
+        var game = new Phaser.Game(config);
+
+        let bird;
+        let keyUp;
+        let birds = [];
+
+        // Função usada para fazer um pré-carregamento dos recursos que serão usados no jogo (executada uma vez)
+        function preload() {
+            this.load.image('bg', 'assets/space.png'); // Carregar a imagem de fundo
+
+            for (let i = 1; i < 4; i++) {
+                this.load.spritesheet('bird' + i, 'assets/bird' + i + '.png', { frameWidth: 75, frameHeight: 75 }); // Carregar a imagem do passarinho roxo
+            }
+        }
+
+        // Função usada para criar os elementos do jogo (executada uma vez)
+        function create() {
+            // Registra a tecla de espaço para ser usada no jogo
+            keyUp = this.input.keyboard.addKey(
+                Phaser.Input.Keyboard.KeyCodes.SPACE
+            );
+
+            // Adiciona a imagem de fundo
+            this.add.image(400, 300, 'bg').setScale(1.2);
+
+            for (let i = 1; i < 4; i++) {
+                // Configuração da animação do passarinho    
+                this.anims.create({
+                    key: 'fly' + i, // Nome da animação
+                    frames: this.anims.generateFrameNumbers('bird' + i, { start: 0, end: 7 }), // Quadros da animação
+                    frameRate: 10, // Velocidade da animação
+                    repeat: -1 // Repetir a animação infinitamente
+                }); // Registrar a animação
+            }
+
+            // Função repetitiva para criar 10 passarinhos
+            for (let i = 0; i < 10; i++) {
+                // Adiciona o passarinho em uma posição aleatória na tela
+                let x = Phaser.Math.Between(0, 800);
+                let y = Phaser.Math.Between(0, 600);
+                let birdDesign = Phaser.Math.Between(1, 3);
+                let birdName = 'bird' + birdDesign;
+
+                let bird = this.add.sprite(x, y, birdName).setScale(1.3)
+
+                bird.anims.play('fly' + birdDesign, true); // Iniciar a animação
+                birds.push(bird); // Adicionar o passarinho ao array de passarinhos
+            }
+        }
+
+        // Função usada para atualizar o jogo (executada várias vezes por segundo)
+        function update() {
+
+            // Percorre todos os passarinhos do jogo
+            for (var bird of birds) {
+                // Movimentação do passarinho no eixo X
+                moveBirdX(bird);
+
+                // Movimentação do passarinho no eixo Y
+                moveBirdY(bird);
+            }
+        }
+
+        function moveBirdX(bird) {
+            if (bird.x <= 100) {
+                // Verifica se o passarinho está na borda à esquerda e inverte a animação e a direção, para que ele vá para a direita
+                bird.setFlip(false, false);
+                bird.ida = true;
+            }
+
+            if (bird.x < 700 && bird.ida) {
+                // Se o passarinho está indo para a direita e não chegou na borda direita, ele continua indo para a direita
+                bird.x += 5;
+            }
+
+            if (bird.x >= 700) {
+                // Se o passarinho chegou na borda direita, inverte a animação e a direção, para que ele vá para a esquerda
+                bird.setFlip(true, false);
+                bird.ida = false;
+            }
+
+            if (bird.x > 100 && !bird.ida) {
+                // Se o passarinho está indo para a esquerda e não chegou na borda esquerda, ele continua indo para a esquerda
+                bird.x -= 5;
+            }
+        }
+
+
+        function moveBirdY(bird) {
+            // Adiciona gravidade ao passarinho
+            bird.velocityY = (bird.velocityY || 0) + 0.5; // Aumenta a velocidade de queda com o tempo
+            bird.y += bird.velocityY;
+
+            // Verifica se a tecla de espaço foi pressionada para fazer o passarinho "pular"
+            if (keyUp.isDown) {
+                bird.velocityY = Phaser.Math.Between(-10, -30); // Define a velocidade de subida
+                bird.y += bird.velocityY / 2;
+            }
+
+            // Limita a posição do passarinho para que ele não saia da tela
+            if (bird.y > 500) {
+                bird.y = 500;
+                bird.velocityY = 0; // Reseta a velocidade ao tocar o chão
+            }
+            if (bird.y < 0) {
+                bird.y = 0;
+                bird.velocityY = 0; // Reseta a velocidade ao tocar o topo
+            }
+        }
+
+
+    </script>
+
+</body>
+
+</html>
